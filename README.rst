@@ -48,6 +48,6 @@ Poetry Install
 
 3. Clone github folder
 
-4. `cd tox21_models`
+4. :code:`cd tox21_models`
 
 5. `poetry install`
