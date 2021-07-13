@@ -8,6 +8,7 @@ authors = ["jdkern11 <leolion29@gmail.com>"]
 python = ">=3.7.0,<3.8.0"
 pgfingerprinting = {git = "ssh://git@github.com/Ramprasad-Group/pgfingerprinting.git", rev = "main"}
 torch = "^1.9.0"
+matplotlib = "^3.4.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
