@@ -1,3 +1,18 @@
+.. |check| raw:: html
+
+    <input checked=""  type="checkbox">
+
+.. |check_| raw:: html
+
+    <input checked=""  disabled="" type="checkbox">
+
+.. |uncheck| raw:: html
+
+    <input type="checkbox">
+
+.. |uncheck_| raw:: html
+
+    <input disabled="" type="checkbox">
 ============
 TOX21 Models
 ============
@@ -8,13 +23,13 @@ Polymer Genome.
 Progress
 --------
 
-- U+2610 Simple neural network for HEP Liver channel outcomes.
+- |uncheck_| Simple neural network for HEP Liver channel outcomes.
 
-  - U+2611 Fingerprint polymers.
+  - |check_| Fingerprint polymers.
 
-  - U+2611 Clean data.
+  - |check_| Clean data.
 
-  - U+2610 Create model infrastructure.
+  - |uncheck_| Create model infrastructure.
 
   - Data Caveats:
 
@@ -28,4 +43,4 @@ Progress
     - If a chemical has both antagonist and agonist channel outcome, 
       antagonist chosen for datapoint.
 
-- U+2610 Create multitask model for all assays.
+- |uncheck_| Create multitask model for all assays.
