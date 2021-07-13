@@ -10,7 +10,7 @@ Progress
 
 - [ ] Simple neural network for HEP Liver channel outcomes.
 
-  - [x] Fingerprint polymers.
+  - [x] Fingerprint chemicals.
 
   - [x] Clean data.
 
