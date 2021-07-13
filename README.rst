@@ -8,12 +8,13 @@ Polymer Genome.
 Progress
 --------
 
-- [] Simple neural network for HEP Liver channel outcomes.
+- U+2610 Simple neural network for HEP Liver channel outcomes.
 
-  - [X] Fingerprint polymers.
-  - [X] Clean data.
+  - U+2611 Fingerprint polymers.
 
-  - [] Create model infrastructure.
+  - U+2611 Clean data.
+
+  - U+2610 Create model infrastructure.
 
   - Data Caveats:
 
@@ -27,4 +28,4 @@ Progress
     - If a chemical has both antagonist and agonist channel outcome, 
       antagonist chosen for datapoint.
 
-- [] Create multitask model for all assays.
+- U+2610 Create multitask model for all assays.
