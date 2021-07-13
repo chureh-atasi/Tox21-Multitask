@@ -31,3 +31,23 @@ Progress
       antagonist chosen for datapoint.
 
 - [ ] Create multitask model for all assays.
+
+
+Poetry Install
+--------------
+
+1. If you don't have poetry installed
+
+  1. `Install poetry<https://python-poetry.org/docs/>`_
+
+2. If you don't have a python 3.7.11 version installed... 
+
+  1. `pyenv install 3.7.11`
+  
+  2. `poetry env use /path/to/version/3.7.11/python3.7` 
+
+3. Clone github folder
+
+4. `cd tox21_models`
+
+5. `poetry install`
