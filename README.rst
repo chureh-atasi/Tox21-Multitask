@@ -14,7 +14,9 @@ Progress
 
   - [x] Clean data.
 
-  - [ ] Create model infrastructure.
+  - [x] Create model infrastructure.
+
+  - [ ] Add MaxAbsScaler
 
   - Data Caveats:
 
