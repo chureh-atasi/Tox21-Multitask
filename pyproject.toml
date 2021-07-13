@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "tox21_models"
+version = "0.1.0"
+description = ""
+authors = ["jdkern11 <leolion29@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pgfingerprinting = {git = "ssh://git@github.com/Ramprasad-Group/pgfingerprinting.git", rev = "main"}
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
