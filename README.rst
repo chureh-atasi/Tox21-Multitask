@@ -3,7 +3,7 @@ TOX21 Models
 ============
 
 This code will be used to generate `tox21 <https://tox21.gov>`_ models for
-Polymer Genome.
+Polymer Genome with PyTorch.
 
 Progress
 --------
@@ -16,7 +16,7 @@ Progress
 
   - [x] Create model infrastructure.
 
-  - [ ] Add MaxAbsScaler
+  - [ ] Add MaxAbsScaler.
 
   - Data Caveats:
 
