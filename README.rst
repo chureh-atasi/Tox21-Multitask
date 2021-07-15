@@ -8,6 +8,8 @@ Polymer Genome with PyTorch.
 Progress
 --------
 
+- [x] Add Chureh to github repository
+
 - [ ] Simple neural network for HEP Liver channel outcomes.
 
   - [x] Fingerprint chemicals.
