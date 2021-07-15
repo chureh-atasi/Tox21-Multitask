@@ -5,3 +5,4 @@
 **/__pycache__
 !.gitignore
 env_loc.txt
+test/
