@@ -38,7 +38,7 @@ Poetry Install
 
 1. If you don't have poetry installed
 
-  1. `Install poetry<https://python-poetry.org/docs/>`_
+  1. `Install poetry <https://python-poetry.org/docs/>`_
 
 2. If you don't have a python 3.7.11 version installed... 
 
