@@ -1,6 +1,6 @@
 # TOX21 Models
 
-This code will be used to generate `tox21 <https://tox21.gov>`_ models for
+This code will be used to generate [tox21](https://tox21.gov) models for
 Polymer Genome with PyTorch.
 
 ## Progress
@@ -36,16 +36,16 @@ Polymer Genome with PyTorch.
 
 1. If you don't have poetry installed
 
-  1. `Install poetry <https://python-poetry.org/docs/>`_
+  1. Install [poetry](https://python-poetry.org/docs/)
 
 2. If you don't have a python 3.7.11 version installed... 
 
-  1. :code:`pyenv install 3.7.11`
+  1. `pyenv install 3.7.11`
   
-  2. :code:`poetry env use /path/to/version/3.7.11/python3.7` 
+  2. `poetry env use /path/to/version/3.7.11/python3.7` 
 
 3. Clone github folder
 
-4. :code:`cd tox21_models`
+4. `cd tox21_models`
 
-5. :code:`poetry install`
+5. `poetry install`
