@@ -1,6 +1,4 @@
-============================================
-Log to display how information was generated
-============================================
+# Log to display how clean data was generated
 
 Please update as changes occur. If cleaning method is altered, alter
 clean.py and rerun.

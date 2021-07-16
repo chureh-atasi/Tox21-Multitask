@@ -1,12 +1,9 @@
-============
-TOX21 Models
-============
+# TOX21 Models
 
 This code will be used to generate `tox21 <https://tox21.gov>`_ models for
 Polymer Genome with PyTorch.
 
-Progress
---------
+## Progress
 
 - [ ] Simple neural network for HEP Liver channel outcomes.
 
@@ -33,8 +30,7 @@ Progress
 - [ ] Create multitask model for all assays.
 
 
-Poetry Install
---------------
+## Poetry Install
 
 1. If you don't have poetry installed
 
