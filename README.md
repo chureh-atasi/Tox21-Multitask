@@ -46,7 +46,7 @@ Polymer Genome with PyTorch.
 
     3. If pyenv fails, try using miniconda to manage python env instead
 
-        1. Install miniconda
+        1. Install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
 
         2. `conda create --name py37 python=3.7`
 
