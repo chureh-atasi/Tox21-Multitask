@@ -8,6 +8,25 @@ from tox21_models.utils import data_loader, tuner, create_model
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import seaborn as sns
+import time
+
+def add_fps_to_df(df, fp_df):
+    """"""
+    for index, row in df.iterrows():
+        new_row = {}
+        for col in cols:
+            new_row[col] = row[col]
+       
+        tdf = fp_df.loc[fp_df.SMILES == row['SMILES']]
+        for col in fp_headers:
+            new_row[col] = tdf[col].values[0]
+
+        rows_with_fp.append(new_row.copy())
+
+    print(f'Took {time.time() - st} seconds')
+    del df
+    df = pd.DataFrame(rows_with_fp)
+    return df
 
 def run(props: list, save_folder: str = None, regression: bool = False):
     """Run meta model cross validation and training
@@ -45,20 +64,9 @@ def run(props: list, save_folder: str = None, regression: bool = False):
     rows_with_fp = []
     cols = df.columns
     logging.info("Appending fingerprints to dataframe...")
+    df = add_fps_to_df(df, fp_df)
     # TODO MAKE FASTER
-    for index, row in df.iterrows():
-        new_row = {}
-        for col in cols:
-            new_row[col] = row[col]
-       
-        tdf = fp_df.loc[fp_df.SMILES == row['SMILES']]
-        for col in fp_headers:
-            new_row[col] = tdf[col].values[0]
-
-        rows_with_fp.append(new_row.copy())
-
-    del df
-    df = pd.DataFrame(rows_with_fp)
+    st = time.time()
 
     # Make regression models
     if regression:

@@ -6,11 +6,6 @@ from sklearn.preprocessing import MaxAbsScaler, LabelBinarizer
 from sklearn.model_selection import train_test_split, StratifiedKFold
 import tensorflow as tf
 
-LB = LabelBinarizer()
-LB.fit(['high', 'medium', 'low'])
-# To see, uncomment this
-#print(LB.transform(['medium', 'low', 'high']))
-
 def create_dataset(df, regression, fp_headers):
     """Create dataset for training
     
@@ -18,6 +13,8 @@ def create_dataset(df, regression, fp_headers):
         regression (bool):  
             Optional. Whether a regression or classification model is being  
             trained. Default is True.   
+
+    Return a dataset for tensorflow
     """
     batch_size = 200
     fps = np.stack(df[fp_headers].values).astype(np.float32)
@@ -28,7 +25,6 @@ def create_dataset(df, regression, fp_headers):
     else:
         target = np.stack(df.class_vals.values).astype(np.float32)
     # Creates dataset
-    print(target)
     dataset = tf.data.Dataset.from_tensor_slices(({'selector': selector, 
         'fps': fps, 'prop': df.prop}, target)
     )

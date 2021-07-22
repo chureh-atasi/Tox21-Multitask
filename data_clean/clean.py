@@ -1,4 +1,4 @@
-"""Script to determine data to keep for analysis"""
+"""Script to determine data to keep for analys"""
 import logging
 import sys
 import pandas as pd
@@ -6,7 +6,6 @@ import pandas as pd
 # Will change this in the future to just be the fps of all molecules
 fp_df = pd.read_csv('tox21_chem_fps.csv')
 fp_smiles = list(set(fp_df.SMILES.values))
-
 
 def clean_data(path: str, assay_type: str, all_df: pd.DataFrame):
     """Cleans each tox21 assay
@@ -70,9 +69,10 @@ def clean_data(path: str, assay_type: str, all_df: pd.DataFrame):
     return all_df
 
 # All data will be appended here
-all_df = pd.DataFrame(columns=['SMILES', 'CHANNEL_OUTCOME', 'assay_type']) 
+all_df = pd.DataFrame(columns=['SMILES', 'CHANNEL_OUTCOME', 'prop']) 
 files = {'Liver': 'HEP_Liver_data_copy_csv.csv'}
-for assay_type in files:
-    all_df = clean_data(files[assay_type], assay_type, all_df.copy())
+# files['Liver'] = 'HEP_Liver_data_copy_csv.csv'
+for key in files:
+    all_df = clean_data(path=files[key], assay_type=key, all_df=all_df.copy())
 
 all_df.to_csv('Clean_Tox_Data.csv', index=False)

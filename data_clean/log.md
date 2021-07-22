@@ -9,7 +9,7 @@ clean.py and rerun.
 
 3. clean.py run to create HEP\_Liver\_clean\_data.csv 
    
-4. Move HEP\_Liver\_fps.csv and HEP\_Liver\_clean\_data.csv to data folder
+4. Move Clean\_Tox\_Data.csv and tox21\_chem\_fps.csv to data folder
    in repository.
 
 5. Add fingerprint\_analysis folder to analyze fingerprints.
