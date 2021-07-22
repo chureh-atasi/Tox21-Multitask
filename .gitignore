@@ -8,3 +8,9 @@ env_loc.txt
 presentations/
 presentations/*
 test/
+.venv/
+results/**
+results/*
+!results/run.py
+dist/
+tox21_models.egg-info/

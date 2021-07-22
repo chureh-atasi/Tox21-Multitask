@@ -4,7 +4,13 @@ import sys
 import pandas as pd
 from pgfingerprinting import fp
 
-df = pd.read_csv('HEP_Liver_data_copy_csv.csv')
+data_files = ['HEP_Liver_data_copy_csv.csv']
+all_smiles = []
+for dat_file in data_files:
+    df = pd.read_csv(data_files)
+    smiles = list(set(df.SMILES.values))
+    new_smiles = [smile in smiles if smile not in all_smiles]
+    all_smiles = all_smiles + new_smiles
 
 params = {
     "fp_identifier": "fp_",
@@ -20,9 +26,8 @@ params = {
     "calculate_side_chain": 0,
 }
 fps = []
-smiles = list(set(df.SMILES.values))
 curr = 0
-for smile in smiles:
+for smile in all_smiles:
     if not smile != smile:
         string = '{} / {}: {}'.format(curr, len(smiles), smile)
         curr += 1
@@ -38,4 +43,4 @@ for smile in smiles:
 
 save_df = pd.DataFrame(fps)
 save_df = save_df.fillna(0)
-save_df.to_csv('HEP_Liver_fps.csv')
+save_df.to_csv('tox21_chem_fps.csv')
