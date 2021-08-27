@@ -10,7 +10,7 @@ import tensorflow as tf
 import seaborn as sns
 import time
 
-def add_fps_to_df(df, fp_df):
+def add_fps_to_df(df, fp_df, cols):
     """"""
     for index, row in df.iterrows():
         new_row = {}
@@ -64,7 +64,7 @@ def run(props: list, save_folder: str = None, regression: bool = False):
     rows_with_fp = []
     cols = df.columns
     logging.info("Appending fingerprints to dataframe...")
-    df = add_fps_to_df(df, fp_df)
+    df = add_fps_to_df(df, fp_df, cols)
     # TODO MAKE FASTER
     st = time.time()
 

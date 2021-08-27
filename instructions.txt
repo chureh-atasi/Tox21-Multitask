@@ -1,0 +1,6 @@
+# This adds everything
+git add . 
+# Just adds file
+git add path/to/file.py
+git commit -m "whatever you did"
+git push
