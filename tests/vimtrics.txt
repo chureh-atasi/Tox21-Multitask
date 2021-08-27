@@ -1,0 +1,12 @@
+A - brings you to end of line in insert mode
+0 - brings you to start of the line
+$ - bring you to end of the line`
+gg - brings you to top of document
+G - brings you to bottom of document
+:Sex - Opens another terminal above
+:Vex - Opens terminal to left
+:Vex! - Opens terminal to right
+ctrl-w (jklh) - Switch terminals according to direction
+V - visual mode in line
+u - undo edit
+ctrl r - redo edit

@@ -10,8 +10,23 @@ import tensorflow as tf
 import seaborn as sns
 import time
 
-def add_fps_to_df(df, fp_df, cols):
-    """"""
+def add_fps_to_df(df, fp_df, fp_headers):
+    """Add the dataset fingerprint to the chemical dataframe
+
+    Args:  
+        df (dataframe):  
+            the dataframe that contains all the chemicals and their toxicity values.  
+        fp_df (dataframe):  
+            The dataframe that contains the chemicals fingerprint to the dataframe (df).    
+        fp_headers (list):  
+            A list that contains the column headers in fp_df.  
+
+    Return a dataframe that contains the chemicals along with their fingerprints.  
+    """
+
+    st = time.time()
+    cols = df.columns
+    rows_with_fp = []
     for index, row in df.iterrows():
         new_row = {}
         for col in cols:
@@ -22,7 +37,6 @@ def add_fps_to_df(df, fp_df, cols):
             new_row[col] = tdf[col].values[0]
 
         rows_with_fp.append(new_row.copy())
-
     print(f'Took {time.time() - st} seconds')
     del df
     df = pd.DataFrame(rows_with_fp)
@@ -31,7 +45,7 @@ def add_fps_to_df(df, fp_df, cols):
 def run(props: list, save_folder: str = None, regression: bool = False):
     """Run meta model cross validation and training
     
-    Args:
+    Args:  
         props (list):  
             List of properties (props) to create model for  
         save_folder (str):  
@@ -61,10 +75,8 @@ def run(props: list, save_folder: str = None, regression: bool = False):
     fp_headers = [header for header in fp_df if 'fp_' in header]
 
     # Add fingerprints to dataframe 
-    rows_with_fp = []
-    cols = df.columns
     logging.info("Appending fingerprints to dataframe...")
-    df = add_fps_to_df(df, fp_df, cols)
+    df = add_fps_to_df(df, fp_df, fp_headers)
     # TODO MAKE FASTER
     st = time.time()
 
