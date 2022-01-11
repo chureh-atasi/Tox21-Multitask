@@ -1,10 +1,13 @@
 """Interface to create and train new models"""
 import os
+
+from pandas.core.base import SelectionMixin
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MaxAbsScaler, LabelBinarizer
 from sklearn.model_selection import train_test_split, StratifiedKFold
 import tensorflow as tf
+import joblib
 
 def create_dataset(df, regression, fp_headers):
     """Create dataset for training
@@ -25,6 +28,7 @@ def create_dataset(df, regression, fp_headers):
     else:
         target = np.stack(df.class_vals.values).astype(np.float32)
     # Creates dataset
+    #tf.enable_eager_execution()
     dataset = tf.data.Dataset.from_tensor_slices(({'selector': selector, 
         'fps': fps, 'prop': df.prop}, target)
     )
@@ -34,7 +38,7 @@ def create_dataset(df, regression, fp_headers):
     )
     return dataset
 
-def create_dataset_dict(train_df, val_df, props, fp_headers, regression): 
+def create_dataset_dict(train_df, val_df, props, fp_headers, regression):
     """Scales train and value properties and creates tf datasets
 
     Args:
@@ -84,7 +88,7 @@ def create_datasets(df, props, fp_headers, regression=True):
     # shuffle dataframe
     df = df.sample(frac=1)
 
-
+    folder = os.path.dirname(os.path.realpath(__file__))
     # Selector is one hot encoding for property list
     sel_LB = LabelBinarizer()
     selectors = sel_LB.fit_transform(df['prop'].values)
@@ -95,35 +99,33 @@ def create_datasets(df, props, fp_headers, regression=True):
     class_LB = LabelBinarizer()
     vals = class_LB.fit_transform(df['CHANNEL_OUTCOME'].values)
     df['class_vals'] = [val for val in vals]
+    joblib.dump(class_LB, os.path.join(folder, "label_binarizer.pkl"), compress=3)
+
 
     # Make K fold with preserved percentage of samples for each class
     skf = StratifiedKFold(n_splits=5)
-    # Should only do scailing on training dataset, then fit it to test or 
+    # Should only do scaling on training dataset, then fit it to test or 
     # validation
-    training_df, test_df = train_test_split(df, test_size=0.1, 
-            stratify=df.prop, random_state=123)
-    training_df, test_df = training_df.copy(), test_df.copy()
-    training_df, validation_df = train_test_split(training_df, test_size=0.2, 
-            stratify=training_df.prop, random_state=123)
-    training_df, validation_df = training_df.copy(), validation_df.copy()
+    training_df, test_df = train_test_split(df, test_size=0.2, 
+            stratify=df.CHANNEL_OUTCOME, random_state=123)
+    training_df, test_df = training_df.copy(), test_df.copy() #why
 
 
     datasets = []
     # Create the five-fold CV datasets 
-    for train_index, val_index in skf.split(training_df, training_df.prop):
+    for train_index, val_index in skf.split(training_df, training_df.CHANNEL_OUTCOME):
         train_df = training_df.iloc[train_index].copy()
         val_df = training_df.iloc[val_index].copy()
         datasets.append(create_dataset_dict(train_df, val_df, props, fp_headers,
             regression)
         )
-    
-    dataset_final = create_dataset_dict(training_df, validation_df, props, 
+    dataset_final = create_dataset_dict(train_df, val_df, props, 
             fp_headers, regression
     )
 
     # Scale to appropriate value for later
     scaler = dataset_final['scaler']
     test_df[fp_headers] = scaler.transform(test_df[fp_headers].values)
-    test_dataset = create_dataset(test_df, regression)
+    test_dataset = create_dataset(test_df, regression, fp_headers)
 
     return datasets, dataset_final, test_dataset, sel_LB, class_LB

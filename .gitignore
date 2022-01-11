@@ -1,7 +1,7 @@
 .DS_Store
 .
 **/.DS_Store
-**/.
+**/.*
 **/__pycache__
 !.gitignore
 env_loc.txt
@@ -12,5 +12,10 @@ test/
 results/**
 results/*
 !results/run.py
+data_clean/
+**/data/*
+**/final_data/*
+**/forest_results/*
+**/figures_UMAP/
 dist/
 tox21_models.egg-info/

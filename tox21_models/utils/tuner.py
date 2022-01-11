@@ -1,5 +1,6 @@
 """Script to tune model hyperparameters"""
 import os
+import sys
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error, r2_score
@@ -21,11 +22,22 @@ def tune_classification(datasets, save_folder: str):
         regression (bool):  
             Optional. Whether a regression or classification model is being
             trained. Default is True. 
+
     Returns:
-        dataframe with results
+        df (Dataframe):
+            dataframe with results.
+        best_hp_list (list):
+            list of the best hyperparameters objects.
+        best_dict_values (list):
+            list of 5 dictionaries containing hyperparameters values.
     """
-    results, best_values = [], []
+    results, best_dict_values, best_hp_list = [], [], []
+    prog = 0
     for num, data in enumerate(datasets):
+        PROG = 100*round(prog/5, 3)
+        sys.stdout.write("\r%d%% done" % PROG)
+        sys.stdout.flush()
+        prog += 1
         print("Tuning dataset {}".format(num))
         directory = os.path.join(save_folder, 'hp_search', 'full', 'cv') 
         logdir = os.path.join(save_folder, 'logs', 'hparams')
@@ -58,8 +70,9 @@ def tune_classification(datasets, save_folder: str):
                     verbose=0
                     )
         
-        best_values.append(tuner.get_best_hyperparameters()[0].values)
-        
+        best_dict_values.append(tuner.get_best_hyperparameters()[0].values) #returns dict
+        best_hp_list.append(tuner.get_best_hyperparameters()[0])
+        print(" this is the point")
         # Post processing
         best_model = tuner.get_best_models(1)[0]
         res = np.concatenate(best_model.predict(data['val']), -1)
@@ -87,11 +100,11 @@ def tune_classification(datasets, save_folder: str):
                     accurate += 1
             else:
                 inaccurate += 1
-
+        
         results.append({'accurate': accurate, 'inaccurate': inaccurate})
-
+        
     df = pd.DataFrame(results)
-    return df 
+    return df, best_hp_list, best_dict_values
 
 def tune_regression(datasets, save_folder: str):
     """Tunes hyperparameters
