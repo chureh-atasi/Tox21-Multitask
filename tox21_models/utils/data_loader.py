@@ -26,7 +26,8 @@ def create_dataset(df, regression, fp_headers):
     if regression:
         target = df.scaled_value.values.astype(np.float32)[:, np.newaxis]
     else:
-        target = np.stack(df.class_vals.values).astype(np.float32)
+        target = np.stack(df.class_vals.values).astype(np.float32).reshape((-1,1))
+    
     # Creates dataset
     #tf.enable_eager_execution()
     dataset = tf.data.Dataset.from_tensor_slices(({'selector': selector, 
@@ -103,23 +104,26 @@ def create_datasets(df, props, fp_headers, regression=True):
 
 
     # Make K fold with preserved percentage of samples for each class
-    skf = StratifiedKFold(n_splits=5)
+   
     # Should only do scaling on training dataset, then fit it to test or 
     # validation
     training_df, test_df = train_test_split(df, test_size=0.2, 
             stratify=df.CHANNEL_OUTCOME, random_state=123)
     training_df, test_df = training_df.copy(), test_df.copy() #why
-
-
+    skf = StratifiedKFold(n_splits=5)
     datasets = []
+    train_dataset = pd.DataFrame()
+    val_dataset = pd.DataFrame()
     # Create the five-fold CV datasets 
     for train_index, val_index in skf.split(training_df, training_df.CHANNEL_OUTCOME):
         train_df = training_df.iloc[train_index].copy()
         val_df = training_df.iloc[val_index].copy()
+        train_dataset = pd.concat([train_dataset,train_df])
+        val_dataset = pd.concat([val_dataset,val_df])
         datasets.append(create_dataset_dict(train_df, val_df, props, fp_headers,
             regression)
         )
-    dataset_final = create_dataset_dict(train_df, val_df, props, 
+    dataset_final = create_dataset_dict(train_dataset, val_dataset, props, 
             fp_headers, regression
     )
 
