@@ -1,10 +1,166 @@
 """Models taken from kuelumbus' work"""
+from typing import Dict
 from typing_extensions import Self
 import tensorflow.keras as tfk
 import tensorflow as tf
 import tensorflow_addons as tfa
 from tensorflow.python.keras.engine import data_adapter
 import tensorflow_recommenders as tfrs
+from keras_tuner import HyperParameters, HyperModel
+
+class InputNetwork(tfk.Model):
+    """Model for learning fingerprint data.
+    
+    Can be any fingerprint data
+    """
+    def __init__(self, hp, key):
+        super().__init__()
+        self.my_layers = []
+        self.key = key
+
+        for i in range(hp.Int('num_layers', min_value=1, max_value=3, step=1)): 
+            new_step = [               
+            tf.keras.layers.Dense(units=hp.Int('units_' + str(i),
+                                            min_value=50,
+                                            max_value=300,
+                                            step=50),),
+            
+            tf.keras.layers.PReLU(),
+            tf.keras.layers.Dropout(hp.Float(
+                'dropout_' + str(i),
+                min_value=0.0,
+                max_value=0.5,
+                default=0.2,
+                step=0.1,
+            )),
+            ]
+
+            self.my_layers.append(new_step)
+
+    def call(self, inputs, training=False):
+        """See manage_data.create_tf_dataset"""
+        x = inputs[self.key]
+
+        for num, layer_step in enumerate(self.my_layers):
+            for layer in layer_step:
+                x = layer(x)
+    
+        return x
+
+class OutputNetwork(tfk.Model):
+    """Takes any input and outputs classification."""
+
+    def __init__(self, hp, num_classes):
+        super().__init__()
+        self.my_layers = []
+        self.num_classes = num_classes
+
+        for i in range(hp.Int('num_layers', min_value=1, max_value=3, step=1)): 
+            new_step = [               
+            tf.keras.layers.Dense(units=hp.Int('units_' + str(i),
+                                            min_value=50,
+                                            max_value=300,
+                                            step=50),),
+            
+            tf.keras.layers.PReLU(),
+            tf.keras.layers.Dropout(hp.Float(
+                'dropout_' + str(i),
+                min_value=0.0,
+                max_value=0.5,
+                default=0.2,
+                step=0.1,
+            )),
+            ]
+
+            self.my_layers.append(new_step)
+
+        final_step = [
+            tf.keras.layers.Dense(num_classes),
+        ]
+        self.my_layers.append(final_step)
+
+    def call(self, inputs, training=False):
+        """See manage_data.create_tf_dataset"""
+        # If there is a type error, x data was passed
+        x = inputs
+
+        for num, layer_step in enumerate(self.my_layers):
+            for layer in layer_step:
+                x = layer(x)
+
+        if self.num_classes == 1: 
+            x = tf.keras.activations.sigmoid(x)
+        else:
+            x = tf.keras.activations.softmax(x) 
+        return x
+    
+    def predict_step(self, data):
+        data = data_adapter.expand_1d(data)
+        x, _, _ = data_adapter.unpack_x_y_sample_weight(data)
+        return self(x, training=False)
+
+class MultiTask(tfk.Model):
+    """Takes any input and outputs classification."""
+
+    def __init__(self, hps: Dict[str, HyperParameters], keys: Dict[str, str],
+            num_classes):
+        super().__init__()
+        self.num_classes = num_classes
+        self.solvent = InputNetwork(hps['solvent'], keys['solvent'])
+        self.polymer = InputNetwork(hps['polymer'], keys['polymer'])
+        self.concat = OutputNetwork(hps['concat'], num_classes=self.num_classes)
+
+
+    def call(self, inputs, training=False):
+        """See manage_data.create_tf_dataset"""
+        sol_x = self.solvent(inputs)
+        pol_x = self.polymer(inputs)
+        x = tf.concat([sol_x, pol_x], 1)
+        x = self.concat(x)
+        return x
+    
+    def predict_step(self, data):
+        data = data_adapter.expand_1d(data)
+        x, _, _ = data_adapter.unpack_x_y_sample_weight(data)
+        return self(x, training=False)
+
+class OGSolNetModel(HyperModel):
+    """HyperModel with number of classes defined"""
+    def __init__(self, num_classes: int):
+        self.num_classes = num_classes
+        self.loss = tf.keras.losses.CategoricalCrossentropy()
+        if num_classes == 2:
+            self.num_classes = 1
+            self.loss = tf.keras.losses.BinaryCrossentropy()
+
+    def build(self, hp: HyperParameters,
+            hps: Dict[str, HyperParameters], keys: Dict[str, str]):
+        """Builds output model according to passed hyperparameters
+
+        Args:
+            hp (HyperParameters):  
+                Hyperparameters for this model.  
+            hps (Dict[str, HyperParameters]):  
+                Optimizes hyperparameters automatically for polymer, solvent,
+                and concat networks. Keys are 'polymer', 'solvent' and 
+                'concat'.  
+            keys (Dict[str, str]):  
+                Key to indicate polymer and solvent data. Dict keys are 
+                'polymer' and 'solvent'.
+
+        Returns:
+            Compiled model
+        """
+        model = OGSolNet(hps, keys, self.num_classes)
+        opt = tf.keras.optimizers.Adam(
+                hp.Choice('learning_rate',
+                          values=[1e-4]))
+        opt = tfa.optimizers.SWA(opt)
+
+        model.compile(
+            optimizer=opt,
+            loss=self.loss,)
+        return model
 
 class PropertyDownstreamClassifier(tfk.Model):
     """Classifier model"""

@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MaxAbsScaler, LabelBinarizer
 from sklearn.model_selection import train_test_split, StratifiedKFold
+from kerastuner.tuners import Hyperband
 import tensorflow as tf
 import joblib
 
