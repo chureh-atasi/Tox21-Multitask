@@ -1,5 +1,6 @@
 """Script to tune model hyperparameters"""
 import os
+from typing import List
 import sys
 import numpy as np
 import pandas as pd
@@ -12,16 +13,17 @@ from kerastuner.tuners import Hyperband
 import tensorflow.keras as tfk
 import tensorflow as tf
 from tox21_models.utils.models_multi import (build_regression_model,  
-        build_classification_model
+        build_classification_model, MultiTaskModel
 )
 
-def tune_classification(datasets, save_folder: str, dim: int = 2):
+def tune_classification(datasets, save_folder: str, props: List[str], 
+        dim: int = 2):
     """Tunes hyperparameters
 
     Args:
-        regression (bool):  
-            Optional. Whether a regression or classification model is being
-            trained. Default is True. 
+        props (List[str]):  
+            List of properties multitask model is training on.  
+            
 
     Returns:
         df (Dataframe):
@@ -41,8 +43,9 @@ def tune_classification(datasets, save_folder: str, dim: int = 2):
         print("Tuning dataset {}".format(num))
         directory = os.path.join(save_folder, 'hp_search', 'full', 'cv') 
         logdir = os.path.join(save_folder, 'logs', 'hparams')
+
         tuner = Hyperband(
-            build_classification_model,
+            MultiTaskModel(dim, props),
             objective='val_loss',
             max_epochs=300,
             seed=10,

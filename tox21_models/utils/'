@@ -25,16 +25,13 @@ def create_dataset(df, regression, fp_headers):
     unique_props = list(df.prop.unique())
     features = {}
     target = []
-    features = {
-                'prop': df.prop,
-                'fps': np.stack(df[fp_headers].values).astype(np.float32)
-                }
     for prop in unique_props:
         tdf = df.loc[df.prop == prop]
-        #features[prop] = np.stack(tdf[fp_headers].values).astype(np.float32)
+        features[prop] = np.stack(tdf[fp_headers].values).astype(np.float32)
+        print(len(features[prop]))
         target += tdf.class_vals.to_list()
     fps = np.stack(df[fp_headers].values).astype(np.float32)
-    #selector = np.stack(df.selector.values).astype(np.float32)
+    selector = np.stack(df.selector.values).astype(np.float32)
     # np.newaxis adds one dimension
     if regression:
         target = df.scaled_value.values.astype(np.float32)[:, np.newaxis]
@@ -115,13 +112,13 @@ def create_datasets(df, props, fp_headers, regression=True):
     sel_LB = LabelBinarizer()
     selectors = sel_LB.fit_transform(df['prop'].values)
     # Need to pass array of single values for making dataset from tensor slices
-    df['selector'] = [selector for selector in selectors]
+    df['selector'] = selectors
 
     # class_vals is one hot encoding for possible classes for val list
     class_LB = LabelBinarizer()
     vals = class_LB.fit_transform(df['CHANNEL_OUTCOME'].values)
     df['class_vals'] = [val for val in vals]
-    joblib.dump(class_LB, os.path.join(folder, "label_binarizer.pkl"), compress=3)
+    #joblib.dump(class_LB, os.path.join(folder, "label_binarizer.pkl"), compress=3)
 
 
     # Make K fold with preserved percentage of samples for each class
@@ -152,12 +149,7 @@ def create_datasets(df, props, fp_headers, regression=True):
 
     # Scale to appropriate value for later
     scaler = dataset_final['scaler']
-    non_fp_headers = [col for col in test_df.columns if col not in fp_headers]
-    tdf = pd.DataFrame(scaler.transform(test_df[fp_headers].to_numpy()), 
-        columns=fp_headers, index=test_df.index)
-    for i in range(len(non_fp_headers) - 1, -1, -1):
-        tdf.insert(0, non_fp_headers[i], test_df[non_fp_headers[i]])
-    test_df = tdf
+    test_df[fp_headers] = scaler.transform(test_df[fp_headers].values)
     test_dataset = create_dataset(test_df, regression, fp_headers)
     logging.info("Done creating test dataset.")
 

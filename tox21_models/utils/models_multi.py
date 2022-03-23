@@ -13,21 +13,20 @@ class InputNetwork(tfk.Model):
     
     Can be any fingerprint data
     """
-    def __init__(self, hp, key):
+    def __init__(self, hp):
         super().__init__()
         self.my_layers = []
-        self.key = key
 
-        for i in range(hp.Int('num_layers', min_value=1, max_value=3, step=1)): 
+        for i in range(hp.Int('input_num_layers', min_value=1, max_value=3, step=1)): 
             new_step = [               
-            tf.keras.layers.Dense(units=hp.Int('units_' + str(i),
+            tf.keras.layers.Dense(units=hp.Int('input_units_' + str(i),
                                             min_value=50,
                                             max_value=300,
                                             step=50),),
             
             tf.keras.layers.PReLU(),
             tf.keras.layers.Dropout(hp.Float(
-                'dropout_' + str(i),
+                'input_dropout_' + str(i),
                 min_value=0.0,
                 max_value=0.5,
                 default=0.2,
@@ -50,21 +49,22 @@ class InputNetwork(tfk.Model):
 class OutputNetwork(tfk.Model):
     """Takes any input and outputs classification."""
 
-    def __init__(self, hp, num_classes):
+    def __init__(self, hp, num_classes, prop):
         super().__init__()
         self.my_layers = []
         self.num_classes = num_classes
+        self.prop = prop
 
-        for i in range(hp.Int('num_layers', min_value=1, max_value=3, step=1)): 
+        for i in range(hp.Int(f'{prop}_num_layers', min_value=1, max_value=3, step=1)): 
             new_step = [               
-            tf.keras.layers.Dense(units=hp.Int('units_' + str(i),
+            tf.keras.layers.Dense(units=hp.Int(f'{prop}_units_' + str(i),
                                             min_value=50,
                                             max_value=300,
                                             step=50),),
             
             tf.keras.layers.PReLU(),
             tf.keras.layers.Dropout(hp.Float(
-                'dropout_' + str(i),
+                f'{prop}_dropout_' + str(i),
                 min_value=0.0,
                 max_value=0.5,
                 default=0.2,
@@ -102,26 +102,28 @@ class OutputNetwork(tfk.Model):
 class MultiTask(tfk.Model):
     """Takes any input and outputs classification."""
 
-    def __init__(self, hps: Dict[str, HyperParameters], keys: Dict[str, str],
-            num_classes: int, props: List[str]):
+    def __init__(self, hp: HyperParameters, keys: List[str],
+            num_classes: int):
         super().__init__()
         self.num_classes = num_classes
-        self.input = InputNetwork(hps['input'])
-        self.logits = {}
-        for prop in props:
-            self.logits[prop] = tdf.concat([self.input,
-                OutputNetwork(hps[prop], num_classes=self.num_classes)], 0)
+        self.input_net = InputNetwork(hp)
+        self.heads = {}
+        for prop in keys:
+            self.heads[prop] = OutputNetwork(hp, 
+                    num_classes=self.num_classes, prop=prop)
 
 
     def call(self, inputs, training=False):
         """See manage_data.create_tf_dataset"""
-        x = self.input(inputs['fps'])
+        x = inputs['fps']
         props = inputs['prop']
-        #for model in self.logits:
-            
+        x = self.input_net(x)
+        results = []
+        for prop, path in self.heads.items():
+            indices = tf.where(tf.equal(props, prop))
+            results.append(path(tf.gather(x, indices)))
+        x = tf.concat(results, 0)
 
-        #x = tf.concat([sol_x, pol_x], 0)
-        #x = self.concat(x)
         return x
     
     def predict_step(self, data):
@@ -131,32 +133,27 @@ class MultiTask(tfk.Model):
 
 class MultiTaskModel(HyperModel):
     """HyperModel with number of classes defined"""
-    def __init__(self, num_classes: int):
+    def __init__(self, num_classes: int, keys: List[str]):
+        self.keys = keys
         self.num_classes = num_classes
         self.loss = tf.keras.losses.CategoricalCrossentropy()
         if num_classes == 2:
             self.num_classes = 1
             self.loss = tf.keras.losses.BinaryCrossentropy()
 
-    def build(self, hp: HyperParameters,
-            hps: Dict[str, HyperParameters], keys: Dict[str, str]):
+    def build(self, hp: HyperParameters):
         """Builds output model according to passed hyperparameters
 
         Args:
             hp (HyperParameters):  
                 Hyperparameters for this model.  
-            hps (Dict[str, HyperParameters]):  
-                Optimizes hyperparameters automatically for polymer, solvent,
-                and concat networks. Keys are 'polymer', 'solvent' and 
-                'concat'.  
-            keys (Dict[str, str]):  
-                Key to indicate polymer and solvent data. Dict keys are 
-                'polymer' and 'solvent'.
+            keys (List[str]):  
+                List to indicate different props.
 
         Returns:
             Compiled model
         """
-        model = MultiTask(hps, keys, self.num_classes)
+        model = MultiTask(hp, self.keys, self.num_classes)
         opt = tf.keras.optimizers.Adam(
                 hp.Choice('learning_rate',
                           values=[1e-4]))

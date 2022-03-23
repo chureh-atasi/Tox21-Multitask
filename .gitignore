@@ -12,6 +12,7 @@ test/
 results/**
 results/*
 !results/run.py
+!results/testing_run.py
 data_clean/
 **/data/*
 **/final_data/*

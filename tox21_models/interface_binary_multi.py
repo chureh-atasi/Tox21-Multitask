@@ -83,7 +83,8 @@ def run(props: list, save_folder: str = None, regression: bool = False, dim: int
 
     df = pd.read_csv(os.path.join(interface_folder, 'data', 
             'Clean_Tox_Data.csv')) 
-    df = df.loc[df.prop.isin(props)]
+    props = list(df.prop.unique())
+    #df = df.loc[df.prop.isin(props)]
     #df = df.iloc[0:100]
     
 
@@ -94,13 +95,13 @@ def run(props: list, save_folder: str = None, regression: bool = False, dim: int
     
     # Add fingerprints to dataframe 
     logging.info("Appending fingerprints to dataframe...")
-    """
-    df = add_fps_to_df(df, fp_df)
-    df.to_csv(os.path.join(interface_folder, 'data', 'temp.csv'))
-    """
-    df = pd.read_csv(os.path.join(interface_folder, 'data', 'temp.csv'))
-    # TODO MAKE FASTER
-    # Done
+    cache = os.path.join(interface_folder, 'data', 
+            'cache.csv') 
+    if os.path.exists(cache):
+        df = pd.read_csv(cache)
+    else:
+        df = add_fps_to_df(df, fp_df)
+        df.to_csv(cache, index=False)
     
     fp_headers = [header for header in df if 'fp_' in header]
     print ("This is length " , len(fp_headers))
@@ -166,7 +167,7 @@ def run(props: list, save_folder: str = None, regression: bool = False, dim: int
         for i in range(5):
             model_path = os.path.join(cv_model_path, str(i), 'saved_model.pb')
             if not os.path.exists(model_path):
-                results, best_hp_list, best_hp_values = tuner_multi.tune_classification(datasets, save_folder)
+                results, best_hp_list, best_hp_values = tuner_multi.tune_classification(datasets, save_folder, props)
                 with open(os.path.join(save_folder, 'cv_results.txt'), 'w') as fin:
                     for index, row in results.iterrows():
                         per = round(row['accurate'] 
@@ -175,7 +176,7 @@ def run(props: list, save_folder: str = None, regression: bool = False, dim: int
                                   + f"Inaccruate = {row['inaccurate']}, "
                                   + f"{per*100} % successful\n")
                 break
-        results, best_hp_list, best_hp_values = tuner_multi.tune_classification(datasets, save_folder)
+        results, best_hp_list, best_hp_values = tuner_multi.tune_classification(datasets, save_folder, props)
         with open(os.path.join(save_folder, 'cv_results.txt'), 'w') as fin:
             for index, row in results.iterrows():
                 per = round(row['accurate'] 
@@ -207,11 +208,11 @@ def run(props: list, save_folder: str = None, regression: bool = False, dim: int
         
         if not os.path.exists(f'{save_folder}/chkpt'):
             model = create_model_multi.build_classification(dataset_final, 
-                    save_folder, best_hp_list[1]
+                    save_folder, best_hp_list[1], props
             )
         else:
             model = create_model_multi.build_classification(dataset_final, 
-                    save_folder, best_hp_list[1], False
+                    save_folder, best_hp_list[1], props, False
             ) 
 
         val_res = np.concatenate(model.predict(dataset_final['val']), -1)

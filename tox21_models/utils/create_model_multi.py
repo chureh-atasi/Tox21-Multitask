@@ -1,4 +1,4 @@
-
+from typing import List
 
 import os
 from kerastuner import HyperParameters
@@ -7,11 +7,12 @@ import tensorflow.keras as tfk
 import tensorflow as tf
 import json
 from tox21_models.utils.models_multi import (build_regression_model,  
-        build_classification_model
+        build_classification_model, MultiTaskModel
 )
 import tensorflow_recommenders as tfrs
 
-def build_classification(dataset, save_folder,hp_dict, build_new: bool = True):
+def build_classification(dataset, save_folder, hp_dict, props: List[str],
+        build_new: bool = True):
     """Builds a model and saves it
 
     Args:
@@ -24,6 +25,8 @@ def build_classification(dataset, save_folder,hp_dict, build_new: bool = True):
             If true, build new model, else, load checkpoint
         hp_dict (dict):
             a dictionary containing the averaged hyperparamater values.
+        props (List[str]):  
+            List of properties multitask model is training on.  
     
     Returns:
         Build model
@@ -41,18 +44,18 @@ def build_classification(dataset, save_folder,hp_dict, build_new: bool = True):
 
     if hp_dict == 0:
         hp = HyperParameters()
-        hp.Fixed('learning_rate', value=1e-3) #add the hp_dict here
-        hp.Fixed('concat_at', value=1)
-        hp.Fixed('units_0', value=400)
-        hp.Fixed('units_1', value=400)
-        hp.Fixed('units_2', value=400)
+        for prop in ['input'] + props:
+            hp.Fixed(f'{prop}_units_0', value=100)
+            hp.Fixed(f'{prop}_units_1', value=100)
+            hp.Fixed(f'{prop}_units_2', value=100)
+            hp.Fixed(f'{prop}_num_layers', value=3)
 
-        hp.Fixed('dropout_0', value=0.1)
-        hp.Fixed('dropout_1', value=0.1)
-        hp.Fixed('dropout_2', value=0.1)
+            hp.Fixed(f'{prop}_dropout_0', value=0)
+            hp.Fixed(f'{prop}_dropout_1', value=0)
+            hp.Fixed(f'{prop}_dropout_2', value=0)
     
     else:
-        hp = hp_dict
+        hps = hp_dict
     '''
     else:
         hp = HyperParameters()
@@ -77,7 +80,9 @@ def build_classification(dataset, save_folder,hp_dict, build_new: bool = True):
     f.write("This is the first checkpoint in create model after it goes through if")
     f.close()
     # Create an instance of the model
-    model = build_classification_model(hp)
+    hypermodel = MultiTaskModel(dim, props)
+    props = list(df.prop.unique())
+    model = hypermodel.build(hp=hp) 
     directory = os.path.join(save_folder, 'chkpt')
     if build_new:
         checkpoint = tfk.callbacks.ModelCheckpoint(
