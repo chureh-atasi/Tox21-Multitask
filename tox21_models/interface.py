@@ -1,5 +1,6 @@
 import os
 import logging
+import copy
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 import numpy as np
@@ -26,11 +27,15 @@ def add_fps_to_df(df, fp_df):
 
     Return a dataframe that contains the chemicals along with their fingerprints.  
     """
-
+    fp_df = fp_df.set_index(keys='SMILES')
+    fp_dict = fp_df.to_dict(orient='index') 
+    
     st = time.time()
     cols = df.columns
+    fp_cols = fp_df.columns
     prog = 0
-    df_tot = pd.DataFrame()
+    #df_tot = pd.DataFrame()
+    tot_dat = []
     for index, row in df.iterrows():
         PROG = 100*round(prog/len(df), 3)
         sys.stdout.write("\r%d%% done" % PROG)
@@ -40,11 +45,14 @@ def add_fps_to_df(df, fp_df):
         for col in cols:
             new_row[col] = row[col]
        
-        new_row = pd.DataFrame(new_row, index = ['a'])
-        tdf = fp_df.loc[fp_df.SMILES == row['SMILES']]
-        new_row = pd.merge(new_row, tdf, on="SMILES")
-
-        df_tot = pd.concat([df_tot, new_row] , axis = 0)
+        #new_row = pd.DataFrame(new_row, index = ['a'])
+        #tdf = fp_df.loc[fp_df.SMILES == row['SMILES']]
+        fp = fp_dict[row['SMILES']]
+        #new_row = pd.merge(new_row, tdf, on="SMILES")
+        new_row.update(fp)
+        tot_dat.append(copy.deepcopy(new_row))
+        #df_tot = pd.concat([df_tot, new_row] , axis = 0)
+    df_tot = pd.DataFrame(tot_dat)
     print(f'Took {time.time() - st} seconds')
     return df_tot
 

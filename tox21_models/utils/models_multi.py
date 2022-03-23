@@ -1,5 +1,5 @@
 """Models taken from kuelumbus' work"""
-from typing import Dict
+from typing import Dict, List
 from typing_extensions import Self
 import tensorflow.keras as tfk
 import tensorflow as tf
@@ -39,7 +39,7 @@ class InputNetwork(tfk.Model):
 
     def call(self, inputs, training=False):
         """See manage_data.create_tf_dataset"""
-        x = inputs[self.key]
+        x = inputs
 
         for num, layer_step in enumerate(self.my_layers):
             for layer in layer_step:
@@ -103,20 +103,25 @@ class MultiTask(tfk.Model):
     """Takes any input and outputs classification."""
 
     def __init__(self, hps: Dict[str, HyperParameters], keys: Dict[str, str],
-            num_classes):
+            num_classes: int, props: List[str]):
         super().__init__()
         self.num_classes = num_classes
-        self.solvent = InputNetwork(hps['solvent'], keys['solvent'])
-        self.polymer = InputNetwork(hps['polymer'], keys['polymer'])
-        self.concat = OutputNetwork(hps['concat'], num_classes=self.num_classes)
+        self.input = InputNetwork(hps['input'])
+        self.logits = {}
+        for prop in props:
+            self.logits[prop] = tdf.concat([self.input,
+                OutputNetwork(hps[prop], num_classes=self.num_classes)], 0)
 
 
     def call(self, inputs, training=False):
         """See manage_data.create_tf_dataset"""
-        sol_x = self.solvent(inputs)
-        pol_x = self.polymer(inputs)
-        x = tf.concat([sol_x, pol_x], 1)
-        x = self.concat(x)
+        x = self.input(inputs['fps'])
+        props = inputs['prop']
+        #for model in self.logits:
+            
+
+        #x = tf.concat([sol_x, pol_x], 0)
+        #x = self.concat(x)
         return x
     
     def predict_step(self, data):
@@ -124,7 +129,7 @@ class MultiTask(tfk.Model):
         x, _, _ = data_adapter.unpack_x_y_sample_weight(data)
         return self(x, training=False)
 
-class OGSolNetModel(HyperModel):
+class MultiTaskModel(HyperModel):
     """HyperModel with number of classes defined"""
     def __init__(self, num_classes: int):
         self.num_classes = num_classes
@@ -151,7 +156,7 @@ class OGSolNetModel(HyperModel):
         Returns:
             Compiled model
         """
-        model = OGSolNet(hps, keys, self.num_classes)
+        model = MultiTask(hps, keys, self.num_classes)
         opt = tf.keras.optimizers.Adam(
                 hp.Choice('learning_rate',
                           values=[1e-4]))

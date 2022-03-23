@@ -94,10 +94,11 @@ def run(props: list, save_folder: str = None, regression: bool = False, dim: int
     
     # Add fingerprints to dataframe 
     logging.info("Appending fingerprints to dataframe...")
+    """
     df = add_fps_to_df(df, fp_df)
     df.to_csv(os.path.join(interface_folder, 'data', 'temp.csv'))
-    quit()
-    #df = pd.read_csv(os.path.join(interface_folder, 'data', 'temp.csv'))
+    """
+    df = pd.read_csv(os.path.join(interface_folder, 'data', 'temp.csv'))
     # TODO MAKE FASTER
     # Done
     
@@ -115,7 +116,7 @@ def run(props: list, save_folder: str = None, regression: bool = False, dim: int
     #df = pd.read_csv("/data/chureh/tox21_models/tox21_models/forest_model/final_data/df_actual_outcome_binary.csv")
     #df = pd.read_csv("/data/chureh/tox21_models/data_clean/df_var_reduced_feature.csv")
     print("dataset is loaded")
-    df.pop('CHANNEL_OUTCOME_ACTUAL')
+    #df.pop('CHANNEL_OUTCOME_ACTUAL')
 
     # Make regression models
     if regression:
@@ -159,6 +160,7 @@ def run(props: list, save_folder: str = None, regression: bool = False, dim: int
         datasets, dataset_final, test_dataset, sel_LB, class_LB = (
                 data_loader.create_datasets(df, props, fp_headers, regression)
         )
+        print("finished datasets")
         
         # Check all 5 cross validations have been done, if not, run and break
         for i in range(5):
