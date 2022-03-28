@@ -55,7 +55,7 @@ def build_classification(dataset, save_folder, hp_dict, props: List[str],
             hp.Fixed(f'{prop}_dropout_2', value=0)
     
     else:
-        hps = hp_dict
+        hp = hp_dict
     '''
     else:
         hp = HyperParameters()

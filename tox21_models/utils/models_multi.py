@@ -93,11 +93,6 @@ class OutputNetwork(tfk.Model):
         else:
             x = tf.keras.activations.softmax(x) 
         return x
-    
-    def predict_step(self, data):
-        data = data_adapter.expand_1d(data)
-        x, _, _ = data_adapter.unpack_x_y_sample_weight(data)
-        return self(x, training=False)
 
 class MultiTask(tfk.Model):
     """Takes any input and outputs classification."""
@@ -125,11 +120,6 @@ class MultiTask(tfk.Model):
         x = tf.concat(results, 0)
 
         return x
-    
-    def predict_step(self, data):
-        data = data_adapter.expand_1d(data)
-        x, _, _ = data_adapter.unpack_x_y_sample_weight(data)
-        return self(x, training=False)
 
 class MultiTaskModel(HyperModel):
     """HyperModel with number of classes defined"""

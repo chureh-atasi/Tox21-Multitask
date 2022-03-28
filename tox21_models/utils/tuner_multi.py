@@ -10,6 +10,7 @@ from kerastuner_tensorboard_logger import (
     setup_tb  # Optional
 )
 from kerastuner.tuners import Hyperband
+from sklearn.metrics import confusion_matrix
 import tensorflow.keras as tfk
 import tensorflow as tf
 from tox21_models.utils.models_multi import (build_regression_model,  
@@ -35,6 +36,7 @@ def tune_classification(datasets, save_folder: str, props: List[str],
     """
     results, best_dict_values, best_hp_list = [], [], []
     prog = 0
+    max_epochs = 300 # usually 300
     for num, data in enumerate(datasets):
         PROG = 100*round(prog/5, 3)
         sys.stdout.write("\r%d%% done" % PROG)
@@ -47,7 +49,7 @@ def tune_classification(datasets, save_folder: str, props: List[str],
         tuner = Hyperband(
             MultiTaskModel(dim, props),
             objective='val_loss',
-            max_epochs=300,
+            max_epochs=max_epochs,
             seed=10,
             directory=directory,
             project_name='fold_' + str(num),
@@ -67,7 +69,7 @@ def tune_classification(datasets, save_folder: str, props: List[str],
         
         # Create an instance of the model
         tuner.search(data['train'],
-                    epochs=300,
+                    epochs=max_epochs,
                     validation_data=data['val'],
                     callbacks=[earlystop, reduce_lr],
                     verbose= 1
@@ -79,52 +81,19 @@ def tune_classification(datasets, save_folder: str, props: List[str],
         print("this is the point")
         # Post processing
         best_model = tuner.get_best_models(1)[0]
-        res = np.concatenate(best_model.predict(data['val']), -1)
+        pred = np.concatenate(best_model.predict(data['val']))
+        pred = np.where(pred > 0.5, 1, 0) 
+        # reextract true values
+        true = list(data['val'])
+        true = [true[i][1].numpy() for i in range(len(true))]
+        true = np.concatenate(true)
+        matrix = confusion_matrix(true, pred, labels=[0, 1])
         
-        ### This is changed##
-        '''
-        res = pd.DataFrame(res, columns=['pred_col0', 'pred_col1', 'pred_col2',
-                'is_col0', 'is_col1', 'is_col2', 'target'
-            ]
-        )
-        '''
-#There was "target" but deleted. 
-        res = pd.DataFrame(res, columns=['pred_col0', 'pred_col1',
-                'is_col0', 'target'
-            ]
-        )
         model_folder = os.path.join(save_folder, 'models', 'full', 'cv')
         best_model.save(f'{model_folder}/{num}', include_optimizer=False)
 
-        accurate = 0
-        inaccurate = 0
-        '''
-        for index, row in res.iterrows():
-            if (row['pred_col0'] > row['pred_col2']    
-                and row['pred_col0'] > row['pred_col1']
-                and row['is_col0'] == 1):
-                    accurate += 1
-            elif (row['pred_col2'] > row['pred_col0']    
-                and row['pred_col2'] > row['pred_col1']
-                and row['is_col2'] == 1):
-                    accurate += 1
-            elif (row['pred_col1'] > row['pred_col0']    
-                and row['pred_col2'] < row['pred_col1']
-                and row['is_col1'] == 1):
-                    accurate += 1
-            else:
-                inaccurate += 1
-        '''
-        
-        for index, row in res.iterrows():
-            if ( row['pred_col0'] >= 0.5 and row['is_col0'] == 1):
-                    accurate += 1
-            elif ( row['pred_col1'] < 0.5
-                and row['is_col0'] == 0):
-                    accurate += 1
-            else:
-                inaccurate += 1
-        
+        accurate = np.trace(matrix)
+        inaccurate = np.sum(matrix) - accurate
         results.append({'accurate': accurate, 'inaccurate': inaccurate})    
     df = pd.DataFrame(results)
     return df, best_hp_list, best_dict_values

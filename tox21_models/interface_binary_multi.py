@@ -83,7 +83,6 @@ def run(props: list, save_folder: str = None, regression: bool = False, dim: int
 
     df = pd.read_csv(os.path.join(interface_folder, 'data', 
             'Clean_Tox_Data.csv')) 
-    props = list(df.prop.unique())
     #df = df.loc[df.prop.isin(props)]
     #df = df.iloc[0:100]
     
@@ -102,7 +101,7 @@ def run(props: list, save_folder: str = None, regression: bool = False, dim: int
     else:
         df = add_fps_to_df(df, fp_df)
         df.to_csv(cache, index=False)
-    
+    props = list(df.prop.unique())
     fp_headers = [header for header in df if 'fp_' in header]
     print ("This is length " , len(fp_headers))
     '''
@@ -215,55 +214,30 @@ def run(props: list, save_folder: str = None, regression: bool = False, dim: int
                     save_folder, best_hp_list[1], props, False
             ) 
 
-        val_res = np.concatenate(model.predict(dataset_final['val']), -1)
-        val_res = pd.DataFrame(val_res, columns=['pred_col0', 'pred_col1', 
-         'is_col0', 'target'
-            ]
-        )
-        test_pred = model.predict(test_dataset)
-        test_res_1 = np.concatenate(model.predict(test_dataset), -1)
-        print ("###This is test res##### \n \n ")
-        print(('\n') , ([[item for item in row] for row in test_pred]))
-        print(' \n \n ###This is the end of test res###')
-        test_res = pd.DataFrame(test_res_1, columns=['pred_col0', 'pred_col1', 
-             'is_col0', 'target'
-            ]
-        )
-        path = os.path.join(save_folder, 'testcheck')
-        directory_txt = os.path.join(path, "testcheck_4.txt")
-        f= open(directory_txt,"w+")
-        f.write("This is the checkpoint in interface right after it adds the columns ")
-        with open(directory_txt,'w+') as f_1:
-            for element in best_hp_values:
-                f_1.write(json.dumps(element))
-        f.close()
-        accurate = 0
-        inaccurate = 0
-        for index, row in val_res.iterrows():
-            if ( row['pred_col0'] >= 0.5 and row['is_col0'] == 1):
-                    accurate += 1
-            elif ( row['pred_col1'] < 0.5
-                and row['is_col0'] == 0):
-                    accurate += 1
-            else:
-                inaccurate += 1
+        val_pred = np.concatenate(model.predict(dataset_final['val']))
+        val_pred = np.where(val_pred > 0.5, 1, 0) 
+        val_true = list(dataset_final['val'])
+        val_true = [val_true[i][1].numpy() for i in range(len(val_true))]
+        val_true = np.concatenate(val_true)
+        val_matrix = confusion_matrix(val_true, val_pred, labels=[0, 1])
 
+        test_pred = np.concatenate(model.predict(test_dataset))
+        test_pred = np.where(test_pred > 0.5, 1, 0) 
+        test_true = list(test_dataset)
+        test_true = [test_true[i][1].numpy() for i in range(len(test_true))]
+        test_true = np.concatenate(test_true)
+        test_matrix = confusion_matrix(test_true, test_pred, labels=[0, 1])
+
+        accurate = np.trace(val_matrix)
+        inaccurate = np.sum(val_matrix) - accurate
 
         with open(os.path.join(save_folder, 'val_results_1.txt'), 'w') as fin:
             fin.write(f"Accurate: {accurate}\nInaccurate: {inaccurate}\n")
             per = round(accurate/(accurate + inaccurate), 3)*100
             fin.write(f"{per} % successful\n")
         
-        accurate = 0
-        inaccurate = 0
-        for index, row in test_res.iterrows():
-            if ( row['pred_col0'] >= 0.5 and row['is_col0'] == 1):
-                    accurate += 1
-            elif ( row['pred_col1'] < 0.5
-                and row['is_col0'] == 0):
-                    accurate += 1
-            else:
-                inaccurate += 1
+        accurate = np.trace(test_matrix)
+        inaccurate = np.sum(test_matrix) - accurate
         
         with open(os.path.join(save_folder, 'test_results.txt'), 'w') as fin:
             fin.write(f"Accurate: {accurate}\nInaccurate: {inaccurate}\n")
@@ -284,8 +258,8 @@ def run(props: list, save_folder: str = None, regression: bool = False, dim: int
         directory_txt = os.path.join(path, "testcheck_5.txt")
         f= open(directory_txt,"w+")
         f.write("This is the checkpoint in interface right after it adds the columns ")
-        val_matrix = model_reports.build_matrix(val_res, labels) 
-        test_matrix = model_reports.build_matrix(test_res, labels) 
+        val_matrix = model_reports.build_df_from_matrix(val_matrix, labels) 
+        test_matrix = model_reports.build_df_from_matrix(test_matrix, labels) 
         path = os.path.join(save_folder, 'testcheck')
         directory_txt = os.path.join(path, "testcheck_6s.txt")
         f= open(directory_txt,"w+")
