@@ -12,7 +12,7 @@ from tox21_models.utils.models_multi import (build_regression_model,
 import tensorflow_recommenders as tfrs
 
 def build_classification(dataset, save_folder, hp_dict, props: List[str],
-        build_new: bool = True):
+        build_new: bool = True, dim: int = 2):
     """Builds a model and saves it
 
     Args:
@@ -81,7 +81,6 @@ def build_classification(dataset, save_folder, hp_dict, props: List[str],
     f.close()
     # Create an instance of the model
     hypermodel = MultiTaskModel(dim, props)
-    props = list(df.prop.unique())
     model = hypermodel.build(hp=hp) 
     directory = os.path.join(save_folder, 'chkpt')
     if build_new:

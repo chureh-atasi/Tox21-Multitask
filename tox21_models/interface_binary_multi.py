@@ -5,8 +5,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 import numpy as np
 import pandas as pd
-from tox21_models.utils import data_loader, tuner_multi, create_model_multi
-from tox21_models import model_reports
+from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import seaborn as sns
@@ -15,6 +14,9 @@ import time
 import sys
 import json
 import joblib
+
+from tox21_models.utils import data_loader, tuner_multi, create_model_multi
+from tox21_models import model_reports
 
 def add_fps_to_df(df, fp_df):
     """Add the dataset fingerprint to the chemical dataframe
@@ -184,13 +186,13 @@ def run(props: list, save_folder: str = None, regression: bool = False, dim: int
                             + f"Inaccruate = {row['inaccurate']}, "
                             + f"{per*100} % successful\n")
         path = os.path.join(save_folder, 'testcheck')
+        if not os.path.isdir(path):
+            os.mkdir(path)
         directory_txt = os.path.join(path, "testcheck_1.txt")
-        f= open(directory_txt,"w+")
         #:wqf.write("This is the first checkpoint in interface right after it's done hyperparamater bla bla ")
         with open(directory_txt,'w+') as f_1:
             for element in best_hp_values:
                 f_1.write(json.dumps(element))
-        f.close()
         
         
         avg_hp_dict = {}

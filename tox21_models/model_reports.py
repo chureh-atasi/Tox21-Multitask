@@ -47,8 +47,8 @@ def build_df_from_matrix(matrix, label):
         row_name = f"true_{cl}"
         row_names.append(row_name)
     matrix_df['row_headers'] = row_names
-    for j in range(len(classes)):
-        cl = classes[j]
+    for j in range(len(label)):
+        cl = label[j]
         col_name = f"pred_{cl}"
         matrix_df[col_name] = matrix[:, j]
     return matrix_df

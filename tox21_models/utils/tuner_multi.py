@@ -36,7 +36,7 @@ def tune_classification(datasets, save_folder: str, props: List[str],
     """
     results, best_dict_values, best_hp_list = [], [], []
     prog = 0
-    max_epochs = 300 # usually 300
+    max_epochs = 300
     for num, data in enumerate(datasets):
         PROG = 100*round(prog/5, 3)
         sys.stdout.write("\r%d%% done" % PROG)
